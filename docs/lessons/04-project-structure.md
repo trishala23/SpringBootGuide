@@ -161,5 +161,5 @@ Before moving on, make sure you can...
 
 ## What's next
 
-In Lesson 5, we'll build a real REST API with multiple
+In [Lesson 5](05-rest-api.md), we'll build a real REST API with multiple
 endpoints — GET and POST — going well beyond the single `/hello` route.

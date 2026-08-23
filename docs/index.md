@@ -46,7 +46,7 @@ You'll get the most out of this guide if you:
 2. [**Setting up your environment**](lessons/02-setting-up-environment.md)
 3. [**Your first Spring Boot app ("Hello World")**](lessons/03-first-app-hello-world.md)
 4. [**Understanding project structure**](lessons/04-project-structure.md)
-5. **Building a REST API** — *(coming soon)*
+5. [**Building a REST API**](lessons/05-rest-api.md)
 6. **Working with data (in-memory first)** — *(coming soon)*
 7. **Connecting to a real database** — *(coming soon)*
 8. **Configuration basics** — *(coming soon)*
