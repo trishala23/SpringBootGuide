@@ -269,6 +269,6 @@ Before moving on, make sure you can...
 
 ## What's next
 
-In Lesson 10, we'll write real tests for this app — checking that a
-missing task actually returns 404, and that validation actually rejects
-bad input, instead of just trusting it by eye.
+In [Lesson 10](10-testing.md), we'll write real tests for this app —
+checking that a missing task actually returns 404, and that validation
+actually rejects bad input, instead of just trusting it by eye.
