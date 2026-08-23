@@ -48,7 +48,7 @@ You'll get the most out of this guide if you:
 4. [**Understanding project structure**](lessons/04-project-structure.md)
 5. [**Building a REST API**](lessons/05-rest-api.md)
 6. [**Working with data (in-memory first)**](lessons/06-in-memory-data.md)
-7. **Connecting to a real database** — *(coming soon)*
+7. [**Connecting to a real database**](lessons/07-database.md)
 8. **Configuration basics** — *(coming soon)*
 9. **Error handling basics** — *(coming soon)*
 10. **Testing your app** — *(coming soon)*
