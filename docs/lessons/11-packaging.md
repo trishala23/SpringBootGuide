@@ -140,5 +140,5 @@ Before moving on, make sure you can...
 
 ## What's next
 
-In Lesson 12, we'll wrap up with a look at what to explore next now that
-you know the fundamentals.
+In [Lesson 12](12-whats-next.md), we'll wrap up with a look at what to
+explore next now that you know the fundamentals.
