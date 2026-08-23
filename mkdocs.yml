@@ -50,3 +50,5 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Lessons:
+      - 1. What is Spring Boot & why use it: lessons/01-what-is-spring-boot.md
