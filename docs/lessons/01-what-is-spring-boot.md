@@ -117,6 +117,6 @@ Before moving on, make sure you can...
 
 ## What's next
 
-In Lesson 2, you'll install everything
+In [Lesson 2](02-setting-up-environment.md), you'll install everything
 you need on your computer and generate your first Spring Boot project
 using a tool called Spring Initializr.
