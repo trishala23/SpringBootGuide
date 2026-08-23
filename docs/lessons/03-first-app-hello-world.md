@@ -195,5 +195,6 @@ Before moving on, make sure you can...
 
 ## What's next
 
-In Lesson 4, we'll slow down and tour every file and folder Spring
-Initializr generated, so nothing in your project feels like a mystery.
+In [Lesson 4](04-project-structure.md), we'll slow down and tour every
+file and folder Spring Initializr generated, so nothing in your project
+feels like a mystery.
