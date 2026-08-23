@@ -246,5 +246,6 @@ Before moving on, make sure you can...
 
 ## What's next
 
-In Lesson 8, we'll look at `application.properties` more closely — what
-else you can configure, and how `application.yml` compares.
+In [Lesson 8](08-configuration.md), we'll look at `application.properties`
+more closely — what else you can configure, and how `application.yml`
+compares.

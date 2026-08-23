@@ -45,7 +45,7 @@ enabled — see [Deployment](#deployment) below) will live at
 | 5 | [Building a REST API](docs/lessons/05-rest-api.md) | ✅ |
 | 6 | [Working with data (in-memory first)](docs/lessons/06-in-memory-data.md) | ✅ |
 | 7 | [Connecting to a real database](docs/lessons/07-database.md) | ✅ |
-| 8 | Configuration basics | 🔜 |
+| 8 | [Configuration basics](docs/lessons/08-configuration.md) | ✅ |
 | 9 | Error handling basics | 🔜 |
 | 10 | Testing your app | 🔜 |
 | 11 | Packaging & running your app | 🔜 |
