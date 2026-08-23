@@ -61,3 +61,4 @@ nav:
       - 8. Configuration basics: lessons/08-configuration.md
       - 9. Error handling basics: lessons/09-error-handling.md
       - 10. Testing your app: lessons/10-testing.md
+      - 11. Packaging and running your app: lessons/11-packaging.md
