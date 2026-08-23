@@ -221,5 +221,5 @@ Before moving on, make sure you can...
 
 ## What's next
 
-In Lesson 11, we'll package this app into a single runnable file and run
-it the way it would run outside your editor.
+In [Lesson 11](11-packaging.md), we'll package this app into a single
+runnable file and run it the way it would run outside your editor.
