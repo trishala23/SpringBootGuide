@@ -154,5 +154,6 @@ Before moving on, make sure you can...
 
 ## What's next
 
-In Lesson 3, you'll actually use Spring Initializr to generate your
-first project, and get "Hello World" running in your browser.
+In [Lesson 3](03-first-app-hello-world.md), you'll actually use Spring
+Initializr to generate your first project, and get "Hello World" running
+in your browser.
