@@ -43,7 +43,7 @@ enabled — see [Deployment](#deployment) below) will live at
 | 3 | [Your first Spring Boot app ("Hello World")](docs/lessons/03-first-app-hello-world.md) | ✅ |
 | 4 | [Understanding project structure](docs/lessons/04-project-structure.md) | ✅ |
 | 5 | [Building a REST API](docs/lessons/05-rest-api.md) | ✅ |
-| 6 | Working with data (in-memory first) | 🔜 |
+| 6 | [Working with data (in-memory first)](docs/lessons/06-in-memory-data.md) | ✅ |
 | 7 | Connecting to a real database | 🔜 |
 | 8 | Configuration basics | 🔜 |
 | 9 | Error handling basics | 🔜 |

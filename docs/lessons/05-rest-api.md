@@ -232,6 +232,6 @@ Before moving on, make sure you can...
 
 ## What's next
 
-In Lesson 6, we'll give this in-memory task list a proper home — a
-dedicated storage class — instead of keeping it directly inside the
-controller.
+In [Lesson 6](06-in-memory-data.md), we'll give this in-memory task list
+a proper home — a dedicated storage class — instead of keeping it
+directly inside the controller.
