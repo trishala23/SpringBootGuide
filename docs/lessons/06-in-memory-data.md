@@ -242,6 +242,6 @@ Before moving on, make sure you can...
 
 ## What's next
 
-In Lesson 7, we replace the inside of `TaskRepository` with a real
-database — and thanks to today's split, our controller won't need to
-change.
+In [Lesson 7](07-database.md), we replace the inside of `TaskRepository`
+with a real database — and thanks to today's split, our controller
+won't need to change.
