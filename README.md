@@ -49,7 +49,7 @@ enabled — see [Deployment](#deployment) below) will live at
 | 9 | [Error handling basics](docs/lessons/09-error-handling.md) | ✅ |
 | 10 | [Testing your app](docs/lessons/10-testing.md) | ✅ |
 | 11 | [Packaging & running your app](docs/lessons/11-packaging.md) | ✅ |
-| 12 | What's next | 🔜 |
+| 12 | [What's next](docs/lessons/12-whats-next.md) | ✅ |
 
 This table is updated as each lesson is merged to `main`.
 

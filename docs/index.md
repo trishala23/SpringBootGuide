@@ -53,7 +53,7 @@ You'll get the most out of this guide if you:
 9. [**Error handling basics**](lessons/09-error-handling.md)
 10. [**Testing your app**](lessons/10-testing.md)
 11. [**Packaging & running your app**](lessons/11-packaging.md)
-12. **What's next** — *(coming soon)*
+12. [**What's next**](lessons/12-whats-next.md)
 
 Lessons are added one at a time; each item above becomes a link as soon
 as that lesson is published. Follow along in the repository's
