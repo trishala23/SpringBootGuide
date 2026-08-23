@@ -56,3 +56,4 @@ nav:
       - 3. Your first Spring Boot app: lessons/03-first-app-hello-world.md
       - 4. Understanding project structure: lessons/04-project-structure.md
       - 5. Building a REST API: lessons/05-rest-api.md
+      - 6. Working with data (in-memory): lessons/06-in-memory-data.md
