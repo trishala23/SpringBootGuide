@@ -217,6 +217,6 @@ Before moving on, make sure you can...
 
 ## What's next
 
-In Lesson 9, we'll handle errors properly — replacing manual
-`ResponseEntity.notFound()` checks scattered through controllers with a
-single, reusable approach.
+In [Lesson 9](09-error-handling.md), we'll handle errors properly —
+replacing manual `ResponseEntity.notFound()` checks scattered through
+controllers with a single, reusable approach.

@@ -59,3 +59,4 @@ nav:
       - 6. Working with data (in-memory): lessons/06-in-memory-data.md
       - 7. Connecting to a real database: lessons/07-database.md
       - 8. Configuration basics: lessons/08-configuration.md
+      - 9. Error handling basics: lessons/09-error-handling.md

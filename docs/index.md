@@ -50,7 +50,7 @@ You'll get the most out of this guide if you:
 6. [**Working with data (in-memory first)**](lessons/06-in-memory-data.md)
 7. [**Connecting to a real database**](lessons/07-database.md)
 8. [**Configuration basics**](lessons/08-configuration.md)
-9. **Error handling basics** — *(coming soon)*
+9. [**Error handling basics**](lessons/09-error-handling.md)
 10. **Testing your app** — *(coming soon)*
 11. **Packaging & running your app** — *(coming soon)*
 12. **What's next** — *(coming soon)*

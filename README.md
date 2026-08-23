@@ -46,7 +46,7 @@ enabled — see [Deployment](#deployment) below) will live at
 | 6 | [Working with data (in-memory first)](docs/lessons/06-in-memory-data.md) | ✅ |
 | 7 | [Connecting to a real database](docs/lessons/07-database.md) | ✅ |
 | 8 | [Configuration basics](docs/lessons/08-configuration.md) | ✅ |
-| 9 | Error handling basics | 🔜 |
+| 9 | [Error handling basics](docs/lessons/09-error-handling.md) | ✅ |
 | 10 | Testing your app | 🔜 |
 | 11 | Packaging & running your app | 🔜 |
 | 12 | What's next | 🔜 |
