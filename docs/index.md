@@ -43,7 +43,7 @@ You'll get the most out of this guide if you:
 ## Lessons
 
 1. [**What is Spring Boot & why use it**](lessons/01-what-is-spring-boot.md)
-2. **Setting up your environment** — *(coming soon)*
+2. [**Setting up your environment**](lessons/02-setting-up-environment.md)
 3. **Your first Spring Boot app ("Hello World")** — *(coming soon)*
 4. **Understanding project structure** — *(coming soon)*
 5. **Building a REST API** — *(coming soon)*

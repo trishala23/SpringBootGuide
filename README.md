@@ -39,7 +39,7 @@ enabled — see [Deployment](#deployment) below) will live at
 | # | Lesson | Status |
 |---|--------|--------|
 | 1 | [What is Spring Boot & why use it](docs/lessons/01-what-is-spring-boot.md) | ✅ |
-| 2 | Setting up your environment | 🔜 |
+| 2 | [Setting up your environment](docs/lessons/02-setting-up-environment.md) | ✅ |
 | 3 | Your first Spring Boot app ("Hello World") | 🔜 |
 | 4 | Understanding project structure | 🔜 |
 | 5 | Building a REST API | 🔜 |
