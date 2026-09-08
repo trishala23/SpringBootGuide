@@ -54,6 +54,7 @@ You'll get the most out of this guide if you:
 10. [**Testing your app**](lessons/10-testing.md)
 11. [**Packaging & running your app**](lessons/11-packaging.md)
 12. [**What's next**](lessons/12-whats-next.md)
+13. [**Interview questions (beginner to advanced)**](lessons/13-interview-questions.md)
 
 Lessons are added one at a time; each item above becomes a link as soon
 as that lesson is published. Follow along in the repository's
