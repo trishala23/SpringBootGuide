@@ -1,6 +1,6 @@
 # Lesson 13: Spring Boot interview questions (beginner to advanced)
 
-*Estimated time: 55 minutes*
+*Estimated time: 70 minutes*
 
 ## What you'll learn
 
@@ -11,6 +11,9 @@
 - How to reason through **scenario-based questions** — "here's a bug, what
   would you check?" — the kind interviewers use to see if you can actually
   debug, not just define terms.
+- The **microservices and production** questions that show up once an
+  interview moves past a single service — caching, resilience, scaling,
+  and testing against a real database.
 - How each answer connects back to something you already built earlier in
   this tutorial, so you're explaining real experience, not memorized
   theory.
@@ -31,11 +34,12 @@ For each question below:
    answer here is something you already touched earlier in this guide.
 
 The questions are grouped into **Beginner**, **Intermediate**, **Advanced**,
-and **Scenario-based**. Interviewers usually start beginner and go deeper
-based on your answers, so read them in that order the first time through.
-The scenario section is different on purpose: instead of asking "what is
-X," it describes a bug or a situation and asks what you'd actually do —
-closer to how senior interviews (and real jobs) work.
+**Microservices & production**, and **Scenario-based**. Interviewers
+usually start beginner and go deeper based on your answers, so read them
+in that order the first time through. The scenario section is different on
+purpose: instead of asking "what is X," it describes a bug or a situation
+and asks what you'd actually do — closer to how senior interviews (and
+real jobs) work.
 
 ## Code example
 
@@ -417,6 +421,134 @@ preferred — that's covered in the intermediate section below.
     without understanding why the cycle exists is usually treating the
     symptom, not the cause.
 
+## Microservices & production questions
+
+This tutorial builds one, single Spring Boot service. In practice, that
+service often ends up as one of several — and interviewers, especially for
+mid-to-senior roles, like to check you've thought about what changes once
+there's more than one.
+
+### What's the actual difference between the Spring Framework, Spring MVC, and Spring Boot?
+
+??? note "Show answer"
+    They're layers, not alternatives. **Spring Framework** is the base —
+    dependency injection and the container everything else builds on.
+    **Spring MVC** is Spring's module specifically for building web
+    applications on top of that container (controllers, request mapping,
+    view resolution). **Spring Boot** sits on top of both — it doesn't
+    replace either, it auto-configures and packages them for you (an
+    embedded server, starter dependencies, sensible defaults) so you're
+    not wiring MVC up by hand. Every controller in this tutorial, since
+    [Lesson 5](05-rest-api.md), is a Spring MVC class; Spring Boot is just
+    what got it running with almost no setup.
+
+### What is caching, and how would you add it to an endpoint like `GET /tasks/{id}`?
+
+??? note "Show answer"
+    Caching means keeping a copy of an expensive result (here, a database
+    lookup) somewhere fast, so a repeated request for the same thing
+    doesn't repeat the expensive work. In Spring, the simplest version is
+    `@EnableCaching` on your configuration plus `@Cacheable("tasks")` on
+    a method like `findById` — Spring wraps that method in a proxy (the
+    same proxy mechanism [`@Transactional` uses](#how-does-something-like-transactional-work-mechanically))
+    that checks the cache before running the real method, and stores the
+    result after. The part interviewers actually want to hear: caching
+    introduces a new bug category, **stale data** — you also need a
+    plan for invalidating or expiring the cache entry (e.g. evicting it
+    in the same method that updates or deletes a task), or reads start
+    returning data that's no longer true.
+
+### What is a circuit breaker, and when would this tutorial's API need one?
+
+??? note "Show answer"
+    As built, this API only talks to its own database — but the moment
+    it calls another service over the network (say, a notifications
+    service when a task is completed), that call can start failing or
+    hanging. A **circuit breaker** (commonly implemented with
+    **Resilience4j** in current Spring Boot apps) watches the failure
+    rate of those calls; once failures cross a threshold, it "opens" and
+    fails fast locally for a while, without even attempting the network
+    call, instead of every request hanging until it times out. After a
+    cooldown it lets a few requests through to test whether the
+    dependency has recovered. The point isn't the library — it's
+    recognizing that one flaky dependency shouldn't be allowed to slow
+    down or take down the whole service.
+
+### How would you make `POST /tasks` safe to retry after a network timeout, without risking a duplicate task?
+
+??? note "Show answer"
+    This is about **idempotency** — an operation that has the same effect
+    no matter how many times it's performed. As built, calling `POST
+    /tasks` twice creates two tasks, because the server has no way to
+    tell "the client retried" apart from "the client wants a second
+    task." A common fix: have the client generate a unique
+    **idempotency key** per logical request (a UUID) and send it in a
+    header; the server records which keys it has already processed and,
+    on a repeat, returns the original result instead of creating a new
+    row. This matters anywhere a client might retry after a timeout
+    without knowing if the first request actually succeeded — which is
+    most network calls, eventually.
+
+### How would you test that this app works against a real database in CI, without every developer needing a shared database server?
+
+??? note "Show answer"
+    **Testcontainers** — a library that starts a real, throwaway database
+    (Postgres, MySQL, whichever this app actually uses in production) in
+    a Docker container just for the test run, and tears it down
+    afterward. It's a step up from the `@DataJpaTest` approach in
+    [Lesson 10](10-testing.md), which by default runs against an
+    in-memory H2 database: H2 is fast but isn't the same database engine
+    as production, so it can miss bugs that only show up against real
+    Postgres-specific behavior. Testcontainers closes that gap while
+    still giving every developer and every CI run its own clean,
+    disposable database — nothing shared, nothing to provision by hand.
+
+### How do multiple Spring Boot services find and talk to each other, instead of hardcoding each other's URLs?
+
+??? note "Show answer"
+    Through **service discovery** — each service registers itself
+    (often with something like Eureka, or whatever the platform provides,
+    like Kubernetes' built-in DNS-based discovery) under a logical name
+    on startup, and other services look each other up by that name
+    instead of a fixed host and port. This matters because in production,
+    instances are constantly starting, stopping, and moving (scaling up,
+    a deploy, a crash and restart) — hardcoded addresses would break
+    immediately, while a name-based lookup keeps working as long as
+    *some* healthy instance is registered under that name.
+
+### How would you find out why one specific slow request was slow, when it passed through three different microservices?
+
+??? note "Show answer"
+    Distributed tracing: each incoming request is tagged with a
+    **correlation ID** (or trace ID) at the edge, that ID is passed along
+    in every downstream call between services, and each service logs its
+    own timing against that same ID — usually collected centrally with a
+    tool like Micrometer Tracing (or the older Spring Cloud Sleuth) feeding
+    something like Zipkin or Jaeger. That gives you one timeline showing
+    exactly which of the three services the time was actually spent in,
+    instead of guessing from three separate, unlinked log files. This is
+    the multi-service version of the single-service visibility
+    [Actuator](#what-does-spring-boot-actuator-give-you-and-why-does-it-matter-in-production)
+    gives you.
+
+### How would you decide whether to split this tutorial's task API into separate services, versus keeping it as one?
+
+??? note "Show answer"
+    There's no universally correct answer, but a strong response weighs
+    the actual cost against the actual benefit rather than assuming
+    microservices are automatically better. Splitting buys independent
+    deployment and scaling (a "notifications" piece under heavy load
+    doesn't need to scale the whole app) and lets different teams own
+    different services — but it costs network calls where there used to
+    be a plain method call, distributed transactions where there used to
+    be one `@Transactional` method, and real operational overhead (each
+    service needs its own monitoring, deployment pipeline, and the
+    tracing/discovery/circuit-breaking machinery above). For a small app
+    like this tutorial's task API, with one team and no scaling problem to
+    solve, staying a single well-organized service is usually the right
+    call — splitting it up should be a response to a specific, measured
+    pain point, not a default.
+
 ## Scenario-based questions
 
 These don't have a one-line definition as the answer. Read the scenario,
@@ -557,9 +689,10 @@ makes an answer sound confident instead of rehearsed.
 
 ## Try it yourself
 
-Pick four questions above — one beginner, one intermediate, one advanced,
-and one scenario — and write out your answer from memory, in your own
-words, without looking. Then compare against the hidden answer.
+Pick five questions above — one beginner, one intermediate, one advanced,
+one microservices/production, and one scenario — and write out your answer
+from memory, in your own words, without looking. Then compare against the
+hidden answer.
 
 ??? note "Show solution"
     There's no single right answer here, but a strong self-check is
@@ -587,6 +720,8 @@ Before you consider yourself interview-ready, make sure you can...
       one is preferred — not just which one is preferred.
 - [ ] Pick at least three advanced questions and explain them using a
       concrete example from the task API you built in this tutorial.
+- [ ] Explain caching, circuit breakers, and idempotency without confusing
+      the three — each solves a different problem.
 - [ ] For at least two scenario questions, say out loud what you'd check
       *first* and why, before jumping to the fix.
 - [ ] Say, honestly, which topics above you're still shaky on — and go
