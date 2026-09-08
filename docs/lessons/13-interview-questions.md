@@ -1,6 +1,6 @@
 # Lesson 13: Spring Boot interview questions (beginner to advanced)
 
-*Estimated time: 40 minutes*
+*Estimated time: 55 minutes*
 
 ## What you'll learn
 
@@ -8,6 +8,9 @@
   from beginner to advanced.
 - Plain-word answers you can actually say out loud in an interview, not
   just recognize when you read them.
+- How to reason through **scenario-based questions** — "here's a bug, what
+  would you check?" — the kind interviewers use to see if you can actually
+  debug, not just define terms.
 - How each answer connects back to something you already built earlier in
   this tutorial, so you're explaining real experience, not memorized
   theory.
@@ -27,9 +30,12 @@ For each question below:
 3. If you struggled, jump back to the lesson linked in parentheses — every
    answer here is something you already touched earlier in this guide.
 
-The questions are grouped into **Beginner**, **Intermediate**, and
-**Advanced**. Interviewers usually start beginner and go deeper based on
-your answers, so read them in that order the first time through.
+The questions are grouped into **Beginner**, **Intermediate**, **Advanced**,
+and **Scenario-based**. Interviewers usually start beginner and go deeper
+based on your answers, so read them in that order the first time through.
+The scenario section is different on purpose: instead of asking "what is
+X," it describes a bug or a situation and asks what you'd actually do —
+closer to how senior interviews (and real jobs) work.
 
 ## Code example
 
@@ -411,6 +417,134 @@ preferred — that's covered in the intermediate section below.
     without understanding why the cycle exists is usually treating the
     symptom, not the cause.
 
+## Scenario-based questions
+
+These don't have a one-line definition as the answer. Read the scenario,
+decide what you'd actually check first, *then* open the answer — the
+order you'd investigate in matters as much as the root cause itself.
+
+### `GET /tasks/999` for a task that doesn't exist returns a `500` error with a stack trace, instead of a clean `404`. What's happening, and how do you fix it?
+
+??? note "Show answer"
+    Somewhere the code is calling something like
+    `taskRepository.findById(id).get()` and letting the `Optional`'s own
+    `NoSuchElementException` escape, instead of turning a missing task
+    into a deliberate outcome. The fix, straight from
+    [Lesson 9](09-error-handling.md): call
+    `.orElseThrow(() -> new TaskNotFoundException(id))` instead of `.get()`,
+    and make sure a `@ControllerAdvice` with an `@ExceptionHandler` for
+    `TaskNotFoundException` maps it to a `404` response. The underlying
+    lesson: an unchecked exception you didn't plan for always becomes a
+    raw `500` — every "expected failure" (not found, invalid input) needs
+    to be turned into a specific exception you deliberately handle.
+
+### Your app works fine locally but fails to start in production with `Failed to configure a DataSource: 'url' attribute is not specified`. What do you check?
+
+??? note "Show answer"
+    Locally you likely have an `application-dev.properties` (or an H2
+    in-memory default) supplying a database URL, and production doesn't
+    have the equivalent values set. Check, in order: which profile is
+    actually active in production (`spring.profiles.active`, often set
+    via an environment variable like `SPRING_PROFILES_ACTIVE`), whether
+    the production profile's properties file exists and is actually being
+    packaged into the deployed artifact, and whether the database
+    connection details are meant to come from environment variables
+    instead (common for secrets, so they're not committed to the repo).
+    This is the same profile mechanism from
+    [Lesson 8](08-configuration.md), just missing its production half.
+
+### A teammate's app fails to start with `Parameter 0 of constructor in TaskService required a single bean, but 2 were found`. Explain the error and how you'd fix it.
+
+??? note "Show answer"
+    Spring found two beans that both match the type `TaskService`'s
+    constructor is asking for, and refuses to guess which one you meant —
+    this usually happens after someone adds a second `@Bean` or
+    `@Component` of the same interface type (for example, two different
+    `PaymentGateway` implementations). Fix it by telling Spring which one
+    you mean: mark the default choice `@Primary`, or use `@Qualifier`
+    with a bean name at the injection point, whichever expresses the
+    intent more clearly. It's the same dependency-injection mechanism
+    from [Lesson 6](06-in-memory-data.md) — it just breaks the moment
+    "exactly one candidate" stops being true.
+
+### A colleague added `@Transactional` to `TaskService.markAllDone()`, but it calls another `@Transactional` method on `this` internally, and rollback isn't happening on failure. Why not?
+
+??? note "Show answer"
+    This is the AOP proxy issue from the [advanced section](#how-does-something-like-transactional-work-mechanically)
+    above, showing up as a real bug. `@Transactional` only takes effect
+    when the call comes through Spring's proxy — an *external* caller
+    invoking `markAllDone()` goes through the proxy correctly, but
+    `markAllDone()` calling another method on `this` is a plain Java call
+    that bypasses the proxy entirely, so the inner method's
+    `@Transactional` is silently ignored. The fix is usually to move the
+    inner method to a separate bean and inject that bean, so the call
+    goes through a real proxy again — not to add more annotations to the
+    same class.
+
+### After adding a `GET /tasks` endpoint that also returns each task's project name, response times get much worse as the task count grows. What's going on?
+
+??? note "Show answer"
+    This is the [N+1 query problem](#whats-the-n1-query-problem-and-how-do-you-fix-it)
+    from the advanced section, caught in the wild: fetching *N* tasks
+    triggers one query per task to lazily load its `project`, on top of
+    the original query — so response time scales with the number of
+    tasks instead of staying flat. Confirm it by turning on SQL logging
+    (`spring.jpa.show-sql=true`) and counting queries for one request.
+    Fix it by fetching the relationship up front for this specific query,
+    with a JPQL `JOIN FETCH` or a Spring Data `@EntityGraph`, rather than
+    making the mapping eager everywhere (which just pays the same cost on
+    every other query that doesn't need it).
+
+### Your `TaskControllerTest` suite (from Lesson 10) passes every time you run it alone, but fails intermittently when the full test suite runs in CI. What would you investigate?
+
+??? note "Show answer"
+    Intermittent failures that depend on *which other tests ran first*
+    almost always mean shared state is leaking between tests — most often
+    a real database or an `@MockBean` whose stubbed behavior wasn't reset
+    between tests. Check whether the failing tests use `@SpringBootTest`
+    or `@DataJpaTest` against a real (even if temporary) database without
+    each test cleaning up the rows it created, and whether tests run in a
+    fixed order that happens to hide the problem locally. The fix is
+    usually making each test independent — wrapping each in its own
+    transaction that rolls back automatically (`@DataJpaTest` does this
+    by default), or explicitly clearing state in `@BeforeEach` — never
+    "pin the test order" as a fix, since that just hides the same bug.
+
+### You're asked to add "mark multiple tasks as done in one request" to the API from this tutorial. How would you design that endpoint?
+
+??? note "Show answer"
+    There's no single correct answer, but a solid response walks through
+    the same decisions this tutorial made for the existing endpoints:
+    pick a method and path that match REST conventions — a `PATCH
+    /tasks/done` (or `/tasks/bulk-complete`) accepting a JSON body like
+    `{"ids": [1, 2, 3]}`, since this is a partial update, not replacing
+    or creating full resources. Validate the list isn't empty
+    ([Lesson 9](09-error-handling.md)'s validation approach applies
+    here too), decide what happens if one of the IDs doesn't exist (fail
+    the whole request with a `404` listing the missing ID, or silently
+    skip it — and say out loud which you'd pick and why), and return a
+    response that confirms what actually changed rather than just `200
+    OK` with no body. Naming the tradeoff explicitly (all-or-nothing vs.
+    best-effort) is what separates a strong answer from just describing
+    the happy path.
+
+### Production users start reporting they occasionally see another user's tasks after you add authentication. Where would you start looking?
+
+??? note "Show answer"
+    "Occasionally" and "another user's data" together point at shared
+    mutable state on a singleton bean — remember from the
+    [intermediate section](#what-scope-do-spring-beans-have-by-default-and-what-does-that-mean)
+    that Spring beans are singletons by default, shared across every
+    concurrent request. If a `@Service` or `@Controller` stores the
+    "current user" or a per-request result in an instance field instead
+    of a local variable or the request-scoped security context, one
+    user's request can overwrite it while another user's request is
+    still reading it. The fix is making sure request-specific data always
+    lives in method parameters/local variables (or a properly
+    request-scoped bean), never in a singleton's instance field — and
+    this bug is a good example of why that rule exists, not just a style
+    preference.
+
 ## Why this matters
 
 Interviewers aren't testing whether you've memorized definitions — they're
@@ -423,9 +557,9 @@ makes an answer sound confident instead of rehearsed.
 
 ## Try it yourself
 
-Pick three questions above — one beginner, one intermediate, one advanced
-— and write out your answer from memory, in your own words, without
-looking. Then compare against the hidden answer.
+Pick four questions above — one beginner, one intermediate, one advanced,
+and one scenario — and write out your answer from memory, in your own
+words, without looking. Then compare against the hidden answer.
 
 ??? note "Show solution"
     There's no single right answer here, but a strong self-check is
@@ -453,6 +587,8 @@ Before you consider yourself interview-ready, make sure you can...
       one is preferred — not just which one is preferred.
 - [ ] Pick at least three advanced questions and explain them using a
       concrete example from the task API you built in this tutorial.
+- [ ] For at least two scenario questions, say out loud what you'd check
+      *first* and why, before jumping to the fix.
 - [ ] Say, honestly, which topics above you're still shaky on — and go
       back to that lesson before an interview, not after.
 
