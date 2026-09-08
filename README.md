@@ -50,6 +50,7 @@ enabled — see [Deployment](#deployment) below) will live at
 | 10 | [Testing your app](docs/lessons/10-testing.md) | ✅ |
 | 11 | [Packaging & running your app](docs/lessons/11-packaging.md) | ✅ |
 | 12 | [What's next](docs/lessons/12-whats-next.md) | ✅ |
+| 13 | [Interview questions (beginner to advanced)](docs/lessons/13-interview-questions.md) | ✅ |
 
 This table is updated as each lesson is merged to `main`.
 
