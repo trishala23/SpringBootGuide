@@ -1,6 +1,6 @@
 # Lesson 13: Spring Boot interview questions (beginner to advanced)
 
-*Estimated time: 70 minutes*
+*Estimated time: 80 minutes*
 
 ## What you'll learn
 
@@ -11,6 +11,8 @@
 - How to reason through **scenario-based questions** — "here's a bug, what
   would you check?" — the kind interviewers use to see if you can actually
   debug, not just define terms.
+- How to reason about **connecting to external services** — timeouts,
+  retries, and not leaking a dependency's failure into your own API.
 - The **microservices and production** questions that show up once an
   interview moves past a single service — caching, resilience, scaling,
   and testing against a real database.
@@ -34,12 +36,12 @@ For each question below:
    answer here is something you already touched earlier in this guide.
 
 The questions are grouped into **Beginner**, **Intermediate**, **Advanced**,
-**Microservices & production**, and **Scenario-based**. Interviewers
-usually start beginner and go deeper based on your answers, so read them
-in that order the first time through. The scenario section is different on
-purpose: instead of asking "what is X," it describes a bug or a situation
-and asks what you'd actually do — closer to how senior interviews (and
-real jobs) work.
+**Connecting to external services**, **Microservices & production**, and
+**Scenario-based**. Interviewers usually start beginner and go deeper based
+on your answers, so read them in that order the first time through. The
+scenario section is different on purpose: instead of asking "what is X,"
+it describes a bug or a situation and asks what you'd actually do —
+closer to how senior interviews (and real jobs) work.
 
 ## Code example
 
@@ -421,6 +423,121 @@ preferred — that's covered in the intermediate section below.
     without understanding why the cycle exists is usually treating the
     symptom, not the cause.
 
+## Connecting to external services
+
+Everything this tutorial's API talks to so far is its own database. Most
+real Spring Boot apps also need to call *other* HTTP services — a payments
+provider, a notifications service, another team's API — and interviewers
+like to probe this because it's where a lot of production incidents
+actually start.
+
+### What are your options for calling another HTTP service from Spring Boot, and which should you use today?
+
+??? note "Show answer"
+    Three you'll see in real code: **`RestTemplate`** (the original,
+    synchronous client — now in maintenance mode, meaning it still works
+    but gets no new features), **`WebClient`** (reactive, non-blocking,
+    part of WebFlux, and noticeably more complex to use correctly if your
+    app is otherwise a plain blocking Spring MVC app like this tutorial's),
+    and **`RestClient`** (added in Spring 6.1 — synchronous like
+    `RestTemplate`, but with a modern, fluent API, and Spring's own
+    recommended default for a blocking app going forward). For a tutorial
+    like this one, built entirely on Spring MVC, `RestClient` is the
+    right fit: synchronous code stays synchronous, without reaching for
+    WebFlux's reactive types just to make one outbound call.
+
+### You add a call to another service, and it works fine in testing — then one day that service hangs, and your whole app grinds to a halt too. What went wrong, and how do you prevent it?
+
+??? note "Show answer"
+    Almost certainly no timeout was configured, so your app's thread sat
+    waiting indefinitely for a response that never came — and since
+    Spring MVC handles one request per thread (the same
+    [thread-per-request model](#when-would-you-reach-for-reactive-programming-spring-webflux-instead-of-the-traditional-spring-mvc-approach-used-in-this-tutorial)
+    from the advanced section), enough hung calls eventually exhaust the
+    thread pool and even requests that have nothing to do with the
+    slow service stop being served. The fix is always setting an explicit
+    **connection timeout** (how long to wait to establish the connection)
+    and **read timeout** (how long to wait for a response) on any HTTP
+    client you build — `RestClient`, `WebClient`, and `RestTemplate` all
+    let you configure both. Never rely on the default, because for most
+    HTTP clients the default is "no timeout at all."
+
+### If the payments service your app calls returns a `503`, should your own `POST /tasks`-equivalent endpoint also return a raw `503` with that service's error body?
+
+??? note "Show answer"
+    No — leaking another service's exact status code and error body
+    couples your API's contract to a dependency your caller has never
+    heard of, and can leak internal details (hostnames, stack traces)
+    you don't control. The same pattern from
+    [Lesson 9](09-error-handling.md) applies here: catch the failure
+    from the external call, translate it into your *own* deliberate
+    exception (e.g. `PaymentServiceUnavailableException`), and let your
+    existing `@ControllerAdvice` map that to a clean, consistent response
+    in your API's own shape — a `502 Bad Gateway` or `503 Service
+    Unavailable` with a message your caller can actually act on, not a
+    forwarded stack trace.
+
+### What's a declarative REST client (like a Feign client, or Spring's `@HttpExchange`), and how is it different from writing the call by hand?
+
+??? note "Show answer"
+    Instead of writing out `restClient.get().uri(...).retrieve()...` by
+    hand every time, you declare an interface describing the calls you
+    want (method, path, parameters) and Spring (or, in older codebases,
+    Feign) generates a working implementation for you at startup —
+    exactly the same idea as
+    [Spring Data JPA repositories](#how-do-spring-data-jpa-repository-interfaces-work-given-you-never-write-an-implementation)
+    generating an implementation from an interface you write. The benefit
+    is less repetitive boilerplate and a single, obvious place per
+    external service that lists every call your app makes to it; the
+    tradeoff is a little more magic to understand when something about
+    the generated call goes wrong.
+
+### An external call fails about 1% of the time with a plain connection reset, and support keeps escalating those as bugs. How would you handle it, and what's the risk of handling it carelessly?
+
+??? note "Show answer"
+    Add an automatic **retry with backoff** — using Spring Retry's
+    `@Retryable`, or the retry support in Resilience4j (the same library
+    used for the [circuit breaker](#what-is-a-circuit-breaker-and-when-would-this-tutorials-api-need-one)
+    below) — so a single transient blip is retried once or twice, with an
+    increasing delay between attempts, before it's treated as a real
+    failure. The careless version of this is retrying blindly: retrying a
+    call that *isn't* safe to repeat (like creating a payment) without
+    the [idempotency](#how-would-you-make-post-tasks-safe-to-retry-after-a-network-timeout-without-risking-a-duplicate-task)
+    protection covered below, or retrying so aggressively that a
+    struggling downstream service gets hit even harder right when it's
+    least able to handle it — which is exactly what a circuit breaker is
+    there to prevent once retries alone aren't enough.
+
+### How do you test `TaskService` code that calls an external payments API, without actually calling that API every time your test suite runs?
+
+??? note "Show answer"
+    Two common approaches, and the choice mirrors the
+    [controller test](10-testing.md) from Lesson 10: for a unit test,
+    mock the HTTP client dependency itself (a `@MockBean` or a plain
+    mock of whatever thin wrapper class you built around `RestClient`)
+    and stub its response, the same way Lesson 10 mocked
+    `TaskRepository` to test `TaskController` without a real database.
+    For a more realistic integration test, use a library like
+    **WireMock**, which runs a real (but fake) HTTP server on a local
+    port during the test and lets you script exactly how it should
+    respond — so you're testing your actual HTTP client configuration
+    (timeouts, headers, error mapping) against a real request/response
+    cycle, just not the real external service.
+
+### How would you supply an API key for an external service without hardcoding it in your source code?
+
+??? note "Show answer"
+    The same externalized-configuration approach from
+    [Lesson 8](08-configuration.md): read it via `@Value` or
+    `@ConfigurationProperties` from `application.properties`, but never
+    commit the actual key there — supply the real value through an
+    environment variable (which a profile-specific properties file can
+    reference with `${PAYMENTS_API_KEY}` placeholder syntax) or a
+    dedicated secrets manager in production. The test to apply here: if
+    the value would be embarrassing or dangerous in a public GitHub repo,
+    it doesn't belong committed in any properties file, dev or otherwise
+    — only the *name* of where to find it does.
+
 ## Microservices & production questions
 
 This tutorial builds one, single Spring Boot service. In practice, that
@@ -689,10 +806,10 @@ makes an answer sound confident instead of rehearsed.
 
 ## Try it yourself
 
-Pick five questions above — one beginner, one intermediate, one advanced,
-one microservices/production, and one scenario — and write out your answer
-from memory, in your own words, without looking. Then compare against the
-hidden answer.
+Pick six questions above — one beginner, one intermediate, one advanced,
+one external-services, one microservices/production, and one scenario —
+and write out your answer from memory, in your own words, without
+looking. Then compare against the hidden answer.
 
 ??? note "Show solution"
     There's no single right answer here, but a strong self-check is
@@ -720,8 +837,10 @@ Before you consider yourself interview-ready, make sure you can...
       one is preferred — not just which one is preferred.
 - [ ] Pick at least three advanced questions and explain them using a
       concrete example from the task API you built in this tutorial.
-- [ ] Explain caching, circuit breakers, and idempotency without confusing
-      the three — each solves a different problem.
+- [ ] Explain why a call to another service always needs a timeout, and
+      what happens to your own app if it doesn't have one.
+- [ ] Explain caching, circuit breakers, retries, and idempotency without
+      confusing them — each solves a different problem.
 - [ ] For at least two scenario questions, say out loud what you'd check
       *first* and why, before jumping to the fix.
 - [ ] Say, honestly, which topics above you're still shaky on — and go
