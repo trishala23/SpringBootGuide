@@ -1,4 +1,4 @@
-# Lesson 13: Spring Boot interview questions (beginner to advanced)
+# Lesson 14: Spring Boot interview questions (beginner to advanced)
 
 *Estimated time: 80 minutes*
 
@@ -848,9 +848,10 @@ Before you consider yourself interview-ready, make sure you can...
 
 ## What's next
 
-There's no Lesson 14 — this closes out the tutorial that
-[Lesson 12](12-whats-next.md) wrapped up. If a topic above felt shaky,
-that's your cue for where to go next: re-read the linked lesson, then
-pick the matching topic from
+This closes out the tutorial that [Lesson 12](12-whats-next.md) wrapped
+up, with [Lesson 13](13-connecting-external-services.md) adding one more
+hands-on stop along the way. If a topic above felt shaky, that's your cue
+for where to go next: re-read the linked lesson, then pick the matching
+topic from
 [Lesson 12's "Where to go from here"](12-whats-next.md#where-to-go-from-here)
 to go deeper hands-on. Good luck in the interview.
